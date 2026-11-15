@@ -20,6 +20,7 @@ h2{font-size:18px;margin-bottom:8px}
 .date{color:var(--t2);font-size:15px}
 .stat{font-size:16px;margin:4px 0 8px;color:var(--main);display:flex;justify-content:center;flex-wrap:wrap;gap:2px 14px}
 .sg{color:var(--gx,var(--g))}.so{color:var(--ox,var(--o))}
+.hG{color:var(--gx,var(--g))}.hO{color:var(--ox,var(--o))}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
 .btn,.foot button,.add{font:inherit;font-size:15px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--bd2);background:var(--card);color:var(--main);cursor:pointer}
 .center,.backbar,.foot{display:flex;justify-content:center;gap:10px;margin:12px 0}
@@ -79,8 +80,8 @@ textarea:focus,input:focus{outline:none;border-color:var(--focus);box-shadow:0 0
   <div class="stat" id="stat"></div>
   <div class="backbar" id="back" hidden><button class="btn pri" id="backBtn">回到今天</button></div>
 
-  <section class="card"><h2>功</h2><div id="listG"></div></section>
-  <section class="card"><h2>过</h2><div id="listO"></div></section>
+  <section class="card"><h2 class="hG">功</h2><div id="listG"></div></section>
+  <section class="card"><h2 class="hO">过</h2><div id="listO"></div></section>
   <div class="center"><button class="btn" id="editBtn">编辑项目</button><button class="btn" id="resetBtn" hidden>恢复默认</button></div>
   <div class="center scope" id="scopeBar" hidden><button class="btn" id="scopeToday">仅今天</button><button class="btn" id="scopeAll">永久修改</button></div>
   <div class="hintline" id="scopeHint" hidden>仅今天：明天恢复原清单　·　永久：以后每天沿用</div>
@@ -145,19 +146,19 @@ let S=load();
 const THEMES={
   default:{name:'默认',dots:['#f1e4f6','#fdfbff','#7d6ca4','#ba91b2','#67476a']},
   mint:{name:'薄荷',dots:['#EAF6E8','#C1E4D2','#91CBB8','#E8C7D1','#536F65'],
-    bg:'#EAF6E8',card:'#C1E4D2',g:'#91CBB8',o:'#E8C7D1',main:'#536F65'},
+    bg:'#EAF6E8',card:'#E3F3EB',g:'#91CBB8',o:'#E8C7D1',main:'#536F65'},
   ice:{name:'冰露',dots:['#F0F8F8','#C6EAE5','#9BCFD8','#D7DDF4','#627C91'],
-    bg:'#F0F8F8',card:'#C6EAE5',g:'#9BCFD8',o:'#D7DDF4',main:'#627C91'},
+    bg:'#F0F8F8',card:'#E5F6F3',g:'#9BCFD8',o:'#D7DDF4',main:'#627C91'},
   spring:{name:'初春',dots:['#F4F6DF','#DCE6B8','#B7CE91','#EACFC0','#727D58'],
-    bg:'#F4F6DF',card:'#DCE6B8',g:'#B7CE91',o:'#EACFC0',main:'#727D58'},
+    bg:'#F4F6DF',card:'#EFF4DF',g:'#B7CE91',o:'#EACFC0',main:'#727D58'},
   candy:{name:'糖果',dots:['#FBF3E5','#E9D6AD','#C7DEB9','#E6C1C8','#7B8D78'],
-    bg:'#FBF3E5',card:'#E9D6AD',g:'#C7DEB9',o:'#E6C1C8',main:'#7B8D78'},
-  sea:{name:'海底',dots:['#F9EEE8','#F0C9B8','#C5E1C5','#A9D5D1','#657F78'],
-    bg:'#F9EEE8',card:'#F0C9B8',g:'#C5E1C5',o:'#A9D5D1',main:'#657F78'},
+    bg:'#FBF3E5',card:'#F5ECDA',g:'#C7DEB9',o:'#E6C1C8',main:'#7B8D78'},
+  sea:{name:'海底',dots:['#E9F4F3','#A9D5D1','#C5E1C5','#F0C9B8','#657F78'],
+    bg:'#E9F4F3',card:'#E5F1E5',g:'#A9D5D1',o:'#F0C9B8',main:'#657F78'},
   bubble:{name:'泡泡',dots:['#FFF4DF','#EBD5A8','#D9E6B9','#E7BFCB','#847B91'],
-    bg:'#FFF4DF',card:'#EBD5A8',g:'#D9E6B9',o:'#E7BFCB',main:'#847B91'},
-  sakura:{name:'夜樱',dots:['#16131F','#F0D9E4','#C1A0AC','#4A3F4B','#806C79'],
-    bg:'#16131F',card:'#241C2C',g:'#C1A0AC',o:'#806C79',main:'#F0D9E4',text:'#F0D9E4',bd:'#4A3F4B'},
+    bg:'#FFF4DF',card:'#F6ECD8',g:'#D9E6B9',o:'#E7BFCB',main:'#847B91'},
+  sakura:{name:'夜樱',dots:['#F0D9E4','#C1A0AC','#806C79','#4A3F4B','#16131F'],
+    bg:'#F0D9E4',card:'#F8EDF2',g:'#C1A0AC',o:'#806C79',main:'#4A3F4B',text:'#3A2E3C'},
   cedar:{name:'雪松',dots:['#F0ECDD','#8BA3C5','#495B7D','#23354D','#02122F'],
     bg:'#F0ECDD',card:'#F7F3E7',g:'#8BA3C5',o:'#495B7D',main:'#23354D',text:'#02122F'},
   fog:{name:'冷雾',dots:['#292A2A','#414445','#5C6263','#8F9295','#BEC0C2'],
