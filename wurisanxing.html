@@ -74,7 +74,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--focus);box-shadow:0 0
 
   <section class="card"><h2>功</h2><div id="listG"></div></section>
   <section class="card"><h2>过</h2><div id="listO"></div></section>
-  <div class="center"><button class="btn" id="editBtn">编辑项目</button></div>
+  <div class="center"><button class="btn" id="editBtn">编辑项目</button><button class="btn" id="resetBtn" hidden>恢复默认</button></div>
 
   <section class="card"><h2>自我反省</h2><textarea id="fb" placeholder="今天做对了什么，做错了什么，明天要改什么。"></textarea></section>
   <section class="card"><h2>今日感悟</h2><textarea id="ins" placeholder="今天想到的、看见的、想记住的。"></textarea></section>
@@ -169,6 +169,7 @@ function render(){
   $('back').hidden=!view;
   $('editBtn').hidden=!!view;
   $('editBtn').textContent=editing?'完成编辑':'编辑项目';
+  $('resetBtn').hidden=!editing||!!view;
   renderList('g');renderList('o');renderHist();
 }
 function renderList(t){
@@ -289,6 +290,11 @@ $('editBtn').onclick=()=>{
     syncToday();save();
   }
   editing=!editing;render();
+};
+$('resetBtn').onclick=()=>{
+  if(!confirm('恢复成最初的 5 功 5 过？以后的日子都用这套，过去日子的记录不会变。'))return;
+  S.items=defItems();
+  syncToday();save();render();
 };
 $('backBtn').onclick=()=>goView(TODAY());
 
