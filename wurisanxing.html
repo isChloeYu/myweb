@@ -23,6 +23,8 @@ h2{font-size:18px;margin-bottom:8px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
 .btn,.foot button,.add{font:inherit;font-size:15px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--bd2);background:var(--card);color:var(--main);cursor:pointer}
 .center,.backbar,.foot{display:flex;justify-content:center;gap:10px;margin:12px 0}
+.scope .btn.on{background:var(--focus);border-color:var(--focus);color:#fff}
+.hintline{text-align:center;font-size:13px;color:var(--t2);margin:-4px 0 8px}
 .foot button{flex:1;max-width:200px}
 .btn.pri{background:var(--focus);border-color:var(--focus);color:#fff}
 .row{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 10px;border-radius:10px;cursor:pointer;user-select:none}
@@ -75,6 +77,8 @@ textarea:focus,input:focus{outline:none;border-color:var(--focus);box-shadow:0 0
   <section class="card"><h2>功</h2><div id="listG"></div></section>
   <section class="card"><h2>过</h2><div id="listO"></div></section>
   <div class="center"><button class="btn" id="editBtn">编辑项目</button><button class="btn" id="resetBtn" hidden>恢复默认</button></div>
+  <div class="center scope" id="scopeBar" hidden><button class="btn" id="scopeToday">仅今天</button><button class="btn" id="scopeAll">永久修改</button></div>
+  <div class="hintline" id="scopeHint" hidden>仅今天：明天恢复原清单　·　永久：以后每天沿用</div>
 
   <section class="card"><h2>自我反省</h2><textarea id="fb" placeholder="今天做对了什么，做错了什么，明天要改什么。"></textarea></section>
   <section class="card"><h2>今日感悟</h2><textarea id="ins" placeholder="今天想到的、看见的、想记住的。"></textarea></section>
@@ -123,15 +127,19 @@ function load(){
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let S=load();
-let view=null,mode='7',editing=false,lastToday=TODAY();
+let view=null,mode='7',editing=false,lastToday=TODAY(),work=null,scope='today';
 let hy=new Date().getFullYear(),hm=new Date().getMonth()+1;
 
 function touch(){
   const k=TODAY();
   let d=S.days[k];
   if(!d)d=S.days[k]={g:[],o:[],snap:null,reflect:'',insight:''};
-  d.snap=clone(S.items);
+  d.snap=clone(d.override&&d.items?d.items:S.items);
   return d;
+}
+function dayItems(k){
+  const d=S.days[k];
+  return (d&&d.override&&d.items)?d.items:S.items;
 }
 function syncToday(){
   const d=S.days[TODAY()];
@@ -170,13 +178,18 @@ function render(){
   $('editBtn').hidden=!!view;
   $('editBtn').textContent=editing?'完成编辑':'编辑项目';
   $('resetBtn').hidden=!editing||!!view;
+  const showScope=editing&&!view;
+  $('scopeBar').hidden=!showScope;
+  $('scopeHint').hidden=!showScope;
+  $('scopeToday').classList.toggle('on',scope==='today');
+  $('scopeAll').classList.toggle('on',scope==='all');
   renderList('g');renderList('o');renderHist();
 }
 function renderList(t){
   const k=view||TODAY(),d=S.days[k],ro=!!view;
   const box=$(t==='g'?'listG':'listO');
   box.classList.toggle('ro',ro);
-  const items=ro?(d&&d.snap?d.snap[t]:[]):S.items[t];
+  const items=ro?(d&&d.snap?d.snap[t]:[]):(editing?work[t]:dayItems(k)[t]);
   if(editing&&!ro){
     box.innerHTML=items.map(i=>`<div class="erow"><input data-t="${t}" data-id="${i.id}" value="${esc(i.name)}" maxlength="30" placeholder="项目名称"><button class="del" data-t="${t}" data-id="${i.id}" aria-label="删除">×</button></div>`).join('')+`<button class="add" data-t="${t}">＋ 新增一项</button>`;
     return;
@@ -191,8 +204,8 @@ function fillTexts(){
   $('fb').readOnly=$('ins').readOnly=!!view;
 }
 function goView(k){
+  if(editing){finishEdit();editing=false;work=null;}
   view=k===TODAY()?null:k;
-  editing=false;
   fillTexts();render();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -269,32 +282,57 @@ function listClick(e){
     i>=0?a.splice(i,1):a.push(id);
     save();render();
   }else if(el.classList.contains('del')){
-    S.items[t]=S.items[t].filter(i=>i.id!==id);
-    syncToday();save();render();
+    work[t]=work[t].filter(i=>i.id!==id);
+    render();
   }else{
-    S.items[t].push({id:'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:''});
-    syncToday();save();render();
+    work[t].push({id:'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:''});
+    render();
     const ins=$(t==='g'?'listG':'listO').querySelectorAll('.erow input');
     ins[ins.length-1].focus();
   }
 }
 function listInput(e){
   const i=e.target;if(!i.matches('.erow input'))return;
-  const it=S.items[i.dataset.t].find(x=>x.id===i.dataset.id);
-  if(it){it.name=i.value;syncToday();save()}
+  const it=work[i.dataset.t].find(x=>x.id===i.dataset.id);
+  if(it)it.name=i.value;
 }
 ['listG','listO'].forEach(id=>{$(id).addEventListener('click',listClick);$(id).addEventListener('input',listInput)});
-$('editBtn').onclick=()=>{
-  if(editing){
-    ['g','o'].forEach(t=>S.items[t]=S.items[t].map(i=>({id:i.id,name:i.name.trim()})).filter(i=>i.name));
-    syncToday();save();
+function finishEdit(){
+  if(!work)return;
+  ['g','o'].forEach(t=>{
+    work[t]=work[t].map(i=>({id:i.id,name:(i.name||'').trim()})).filter(i=>i.name);
+  });
+  const k=TODAY(),d=S.days[k];
+  if(scope==='all'){
+    S.items=work;
+    if(d){
+      d.override=false;delete d.items;
+      d.snap=clone(S.items);
+      ['g','o'].forEach(t=>d[t]=d[t].filter(id=>S.items[t].some(i=>i.id===id)));
+    }
+  }else{
+    const day=d||(S.days[k]={g:[],o:[],snap:null,reflect:'',insight:''});
+    day.override=true;day.items=clone(work);day.snap=clone(work);
+    ['g','o'].forEach(t=>day[t]=day[t].filter(id=>work[t].some(i=>i.id===id)));
   }
-  editing=!editing;render();
+  save();
+}
+$('editBtn').onclick=()=>{
+  if(!editing){
+    const d=S.days[TODAY()];
+    work=clone((d&&d.override&&d.items)?d.items:S.items);
+    scope='today';
+    editing=true;
+  }else{
+    finishEdit();editing=false;work=null;
+  }
+  render();
 };
+$('scopeToday').onclick=()=>{scope='today';render()};
+$('scopeAll').onclick=()=>{scope='all';render()};
 $('resetBtn').onclick=()=>{
-  if(!confirm('恢复成最初的 5 功 5 过？以后的日子都用这套，过去日子的记录不会变。'))return;
-  S.items=defItems();
-  syncToday();save();render();
+  if(!confirm('把编辑中的清单恢复成最初的 5 功 5 过？点“完成编辑”后生效。'))return;
+  work=defItems();render();
 };
 $('backBtn').onclick=()=>goView(TODAY());
 
