@@ -19,18 +19,18 @@ h2{font-size:18px;margin-bottom:8px}
 .date,.stat{text-align:center}
 .date{color:var(--t2);font-size:15px}
 .stat{font-size:16px;margin:4px 0 8px;color:var(--main);display:flex;justify-content:center;flex-wrap:wrap;gap:2px 14px}
-.sg{color:var(--g)}.so{color:var(--o)}
+.sg{color:var(--gx,var(--g))}.so{color:var(--ox,var(--o))}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
 .btn,.foot button,.add{font:inherit;font-size:15px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--bd2);background:var(--card);color:var(--main);cursor:pointer}
 .center,.backbar,.foot{display:flex;justify-content:center;gap:10px;margin:12px 0}
-.scope .btn.on{background:var(--focus);border-color:var(--focus);color:#fff}
+.scope .btn.on{background:var(--focus);border-color:var(--focus);color:var(--fg,#fff)}
 .hintline{text-align:center;font-size:13px;color:var(--t2);margin:-4px 0 8px}
 .foot button{flex:1;max-width:200px}
-.btn.pri{background:var(--focus);border-color:var(--focus);color:#fff}
+.btn.pri{background:var(--focus);border-color:var(--focus);color:var(--fg,#fff)}
 .row{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 10px;border-radius:10px;cursor:pointer;user-select:none}
 .chk{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--bd2);display:grid;place-items:center;color:transparent;font-size:16px}
-.row.g.on{background:var(--gl)}.row.g.on .chk{background:var(--g);border-color:var(--g);color:#fff}
-.row.o.on{background:var(--ol)}.row.o.on .chk{background:var(--o);border-color:var(--o);color:#fff}
+.row.g.on{background:var(--gl)}.row.g.on .chk{background:var(--g);border-color:var(--g);color:var(--chkg,#fff)}
+.row.o.on{background:var(--ol)}.row.o.on .chk{background:var(--o);border-color:var(--o);color:var(--chko,#fff)}
 .ro .row{cursor:default}
 .empty{color:var(--t2);padding:8px 10px;font-size:14px}
 .erow{display:flex;gap:8px;margin-bottom:8px}
@@ -42,7 +42,7 @@ textarea::placeholder,input::placeholder{color:var(--t3)}
 textarea:focus,input:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 2px color-mix(in srgb,var(--focus) 30%,transparent)}
 .tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
 .tab{min-height:40px;padding:0;border-radius:10px;border:1px solid var(--bd);background:transparent;color:var(--t2);font:inherit;font-size:13px;cursor:pointer}
-.tab.on{background:var(--focus);border-color:var(--focus);color:#fff}
+.tab.on{background:var(--focus);border-color:var(--focus);color:var(--fg,#fff)}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .grid.y{grid-template-columns:repeat(4,1fr)}
 .grid.wk{margin-bottom:6px;text-align:center;color:var(--t2);font-size:12px}
@@ -60,11 +60,16 @@ textarea:focus,input:focus{outline:none;border-color:var(--focus);box-shadow:0 0
 .legend{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center;margin-top:12px;font-size:12px;color:var(--t2);align-items:center}
 .legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:4px;border:1px solid var(--bd)}
 .legend i.ct{border:1.5px dashed var(--focus);background:none}
-#modal,#modal2{position:fixed;inset:0;background:rgba(40,20,50,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9}
+#modal,#modal2,#themeModal{position:fixed;inset:0;background:rgba(40,20,50,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9}
 .mbox{background:var(--card);border-radius:14px;padding:18px;width:100%;max-width:360px}
 .mbox h2{margin-bottom:10px}
 .mbox input{width:100%;margin-bottom:12px}
 .mbtn{display:flex;gap:10px;justify-content:flex-end}
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:52vh;overflow:auto;margin-bottom:12px}
+.theme{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:10px;border-radius:10px;border:1px solid var(--bd2);background:var(--card);color:var(--text);font:inherit;font-size:14px;cursor:pointer}
+.theme.on{border-color:var(--focus);box-shadow:inset 0 0 0 2px var(--focus)}
+.dots{display:flex;gap:4px}
+.dots i{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.1)}
 </style>
 </head>
 <body>
@@ -90,7 +95,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--focus);box-shadow:0 0
     <div class="legend"><span><i class="cg"></i>功多</span><span><i class="co"></i>过多</span><span><i class="ce"></i>一样多</span><span><i class="ct"></i>仅文字</span></div>
   </section>
 
-  <div class="foot"><button id="exp">导出备份</button><button id="imp">导入备份</button><input type="file" id="file" accept=".json,application/json" hidden></div>
+  <div class="foot"><button id="themeBtn">配色</button><button id="exp">导出备份</button><button id="imp">导入备份</button><input type="file" id="file" accept=".json,application/json" hidden></div>
 </div>
 
 <div id="modal" hidden>
@@ -102,6 +107,14 @@ textarea:focus,input:focus{outline:none;border-color:var(--focus);box-shadow:0 0
 </div>
 
 <div id="modal2" hidden><div class="mbox"><h2 id="m2t"></h2><p id="m2d" style="margin:0 0 10px;font-size:14px;color:var(--t2)"></p><textarea id="m2a" style="min-height:150px;font-size:16px"></textarea><div class="mbtn" style="margin-top:12px;flex-wrap:wrap" id="m2b"></div></div></div>
+
+<div id="themeModal" hidden>
+  <div class="mbox">
+    <h2>配色</h2>
+    <div class="themes" id="themeList"></div>
+    <div class="mbtn"><button class="btn" id="themeClose">关闭</button></div>
+  </div>
+</div>
 <script>
 const KEY='wrsx_v1',DEF_TITLE='瑜の吾日三省',WD='日一二三四五六';
 const $=id=>document.getElementById(id);
@@ -127,6 +140,77 @@ function load(){
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let S=load();
+
+/* 配色主题 */
+const THEMES={
+  default:{name:'默认',dots:['#f1e4f6','#fdfbff','#7d6ca4','#ba91b2','#67476a']},
+  mint:{name:'薄荷',dots:['#EAF6E8','#C1E4D2','#91CBB8','#E8C7D1','#536F65'],
+    bg:'#EAF6E8',card:'#C1E4D2',g:'#91CBB8',o:'#E8C7D1',main:'#536F65'},
+  ice:{name:'冰露',dots:['#F0F8F8','#C6EAE5','#9BCFD8','#D7DDF4','#627C91'],
+    bg:'#F0F8F8',card:'#C6EAE5',g:'#9BCFD8',o:'#D7DDF4',main:'#627C91'},
+  spring:{name:'初春',dots:['#F4F6DF','#DCE6B8','#B7CE91','#EACFC0','#727D58'],
+    bg:'#F4F6DF',card:'#DCE6B8',g:'#B7CE91',o:'#EACFC0',main:'#727D58'},
+  candy:{name:'糖果',dots:['#FBF3E5','#E9D6AD','#C7DEB9','#E6C1C8','#7B8D78'],
+    bg:'#FBF3E5',card:'#E9D6AD',g:'#C7DEB9',o:'#E6C1C8',main:'#7B8D78'},
+  sea:{name:'海底',dots:['#F9EEE8','#F0C9B8','#C5E1C5','#A9D5D1','#657F78'],
+    bg:'#F9EEE8',card:'#F0C9B8',g:'#C5E1C5',o:'#A9D5D1',main:'#657F78'},
+  bubble:{name:'泡泡',dots:['#FFF4DF','#EBD5A8','#D9E6B9','#E7BFCB','#847B91'],
+    bg:'#FFF4DF',card:'#EBD5A8',g:'#D9E6B9',o:'#E7BFCB',main:'#847B91'},
+  sakura:{name:'夜樱',dots:['#16131F','#F0D9E4','#C1A0AC','#4A3F4B','#806C79'],
+    bg:'#16131F',card:'#241C2C',g:'#C1A0AC',o:'#806C79',main:'#F0D9E4',text:'#F0D9E4',bd:'#4A3F4B'},
+  cedar:{name:'雪松',dots:['#F0ECDD','#8BA3C5','#495B7D','#23354D','#02122F'],
+    bg:'#F0ECDD',card:'#F7F3E7',g:'#8BA3C5',o:'#495B7D',main:'#23354D',text:'#02122F'},
+  fog:{name:'冷雾',dots:['#292A2A','#414445','#5C6263','#8F9295','#BEC0C2'],
+    bg:'#292A2A',card:'#414445',g:'#8F9295',o:'#5C6263',main:'#BEC0C2',text:'#BEC0C2',bd:'#5C6263'}
+};
+const THEME_VARS=['--bg','--card','--bd','--bd2','--main','--g','--gl','--gx','--o','--ol','--ox','--t2','--t3','--focus','--cg','--co','--ce','--text','--chkg','--chko','--fg'];
+function hex2rgb(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+function mix(a,b,t){const A=hex2rgb(a),B=hex2rgb(b);return '#'+A.map((v,i)=>Math.round(v*(1-t)+B[i]*t).toString(16).padStart(2,'0')).join('')}
+function lum(h){const c=hex2rgb(h).map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)});return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]}
+function cr(a,b){const A=lum(a),B=lum(b);return (Math.max(A,B)+0.05)/(Math.min(A,B)+0.05)}
+function themeVars(t){
+  const dark=lum(t.bg)<0.4;
+  const text=t.text||(dark?mix(t.main,'#ffffff',0.04):mix(t.main,'#000000',0.45));
+  const bd=t.bd||mix(t.card,t.main,dark?0.3:0.16);
+  const bd2=t.bd2||mix(t.card,t.main,dark?0.45:0.28);
+  const focus=mix(t.g,t.main,0.12);
+  const gx=dark?mix(t.g,t.main,0.55):mix(t.g,text,0.6);
+  const ox=dark?mix(t.o,t.main,0.55):mix(t.o,text,0.6);
+  return {
+    '--bg':t.bg,'--card':t.card,'--bd':bd,'--bd2':bd2,
+    '--main':t.main,'--text':text,
+    '--t2':mix(t.bg,t.main,0.62),
+    '--t3':mix(t.bg,t.main,dark?0.5:0.45),
+    '--g':t.g,'--gl':mix(t.card,t.g,0.22),'--gx':gx,'--cg':mix(t.card,t.g,0.24),
+    '--o':t.o,'--ol':mix(t.card,t.o,0.22),'--ox':ox,'--co':mix(t.card,t.o,0.24),
+    '--ce':mix(t.card,t.g,0.12),'--focus':focus,
+    '--chkg':lum(t.g)>0.35?'#2b2b2b':'#ffffff',
+    '--chko':lum(t.o)>0.35?'#2b2b2b':'#ffffff',
+    '--fg':cr(focus,'#ffffff')>=cr(focus,'#2b2b2b')?'#ffffff':'#2b2b2b'
+  };
+}
+function applyTheme(id){
+  const root=document.documentElement,t=THEMES[id];
+  const meta=document.querySelector('meta[name="theme-color"]');
+  THEME_VARS.forEach(v=>root.style.removeProperty(v));
+  root.style.colorScheme='';
+  if(!t||id==='default'){
+    if(meta)meta.setAttribute('content','#f1e4f6');
+    return;
+  }
+  const vars=themeVars(t);
+  Object.keys(vars).forEach(k=>root.style.setProperty(k,vars[k]));
+  root.style.colorScheme=lum(t.bg)<0.4?'dark':'light';
+  if(meta)meta.setAttribute('content',t.bg);
+}
+function renderThemes(){
+  const cur=S.theme||'default';
+  $('themeList').innerHTML=Object.keys(THEMES).map(id=>{
+    const t=THEMES[id];
+    return `<button class="theme${id===cur?' on':''}" data-theme="${id}"><span class="tname">${t.name}</span><span class="dots">${t.dots.map(c=>`<i style="background:${c}"></i>`).join('')}</span></button>`;
+  }).join('');
+}
+
 let view=null,mode='7',editing=false,lastToday=TODAY(),work=null,scope='today';
 let hy=new Date().getFullYear(),hm=new Date().getMonth()+1;
 
@@ -432,6 +516,15 @@ $('exp').onclick=async()=>{
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden&&TODAY()!==lastToday){lastToday=TODAY();fillTexts();render()}
 });
+
+$('themeBtn').onclick=()=>{renderThemes();$('themeModal').hidden=false};
+$('themeClose').onclick=()=>{$('themeModal').hidden=true};
+$('themeModal').onclick=e=>{if(e.target===$('themeModal'))$('themeModal').hidden=true};
+$('themeList').onclick=e=>{
+  const b=e.target.closest('[data-theme]');if(!b)return;
+  S.theme=b.dataset.theme;save();applyTheme(S.theme);renderThemes();
+};
+applyTheme(S.theme||'default');
 
 fillTexts();render();
 </script>
