@@ -18,7 +18,7 @@ h1{font-size:28px;line-height:1.3;text-align:center;padding:8px 0 2px;cursor:poi
 h2{font-size:18px;margin-bottom:8px}
 .date,.stat{text-align:center}
 .date{color:var(--t2);font-size:15px}
-.stat{font-size:17px;margin:4px 0 8px;color:var(--main)}
+.stat{font-size:16px;margin:4px 0 8px;color:var(--main);display:flex;justify-content:center;flex-wrap:wrap;gap:2px 14px}
 .sg{color:var(--g)}.so{color:var(--o)}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
 .btn,.foot button,.add{font:inherit;font-size:15px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--bd2);background:var(--card);color:var(--main);cursor:pointer}
@@ -146,6 +146,12 @@ function streak(){
   while(has(key(c))){n++;c.setDate(c.getDate()-1)}
   return n;
 }
+function totalDays(){
+  return Object.keys(S.days).filter(k=>{
+    const d=S.days[k];
+    return d&&(d.g.length+d.o.length)>0;
+  }).length;
+}
 function cellInfo(k){
   const d=S.days[k];
   const g=d?d.g.length:0,o=d?d.o.length:0;
@@ -159,7 +165,7 @@ function render(){
   const k=view||TODAY(),d=S.days[k],dt=parse(k);
   $('title').textContent=S.title||DEF_TITLE;
   $('date').textContent=`${dt.getMonth()+1}月${dt.getDate()}日 周${WD[dt.getDay()]} · ${view?'历史记录':'今天'}`;
-  $('stat').innerHTML=`<b class="sg">功 ${d?d.g.length:0}</b>　<b class="so">过 ${d?d.o.length:0}</b>　连续 ${streak()} 天`;
+  $('stat').innerHTML=`<b class="sg">功 ${d?d.g.length:0}</b><b class="so">过 ${d?d.o.length:0}</b><span>连续 ${streak()} 天</span><span>累计 ${totalDays()} 天</span>`;
   $('back').hidden=!view;
   $('editBtn').hidden=!!view;
   $('editBtn').textContent=editing?'完成编辑':'编辑项目';
