@@ -34,7 +34,10 @@ h2{font-size:18px;margin-bottom:8px}
 .row.o.on{background:var(--ol)}.row.o.on .chk{background:var(--o);border-color:var(--o);color:var(--chko,#fff)}
 .ro .row{cursor:default}
 .empty{color:var(--t2);padding:8px 10px;font-size:14px}
-.erow{display:flex;gap:8px;margin-bottom:8px}
+.erow{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.drag{flex:none;width:34px;align-self:stretch;display:flex;align-items:center;justify-content:center;color:var(--t3);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;font-size:20px}
+.erow.dragging{opacity:.45}
+.erow.dragging .drag{cursor:grabbing}
 .erow input,.mbox input{flex:1;min-width:0;height:44px;padding:0 12px;font:inherit;font-size:16px;border:1px solid var(--bd2);border-radius:10px;background:var(--card);color:var(--text)}
 .del{flex:none;width:44px;height:44px;border-radius:10px;border:1px solid var(--bd2);background:transparent;color:var(--o);font-size:24px;cursor:pointer}
 .add{width:100%;border-style:dashed;color:var(--t2)}
@@ -84,7 +87,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--focus);box-shadow:0 0
   <section class="card"><h2 class="hO">过</h2><div id="listO"></div></section>
   <div class="center"><button class="btn" id="editBtn">编辑项目</button><button class="btn" id="resetBtn" hidden>恢复默认</button></div>
   <div class="center scope" id="scopeBar" hidden><button class="btn" id="scopeToday">仅今天</button><button class="btn" id="scopeAll">永久修改</button></div>
-  <div class="hintline" id="scopeHint" hidden>仅今天：明天恢复原清单　·　永久：以后每天沿用</div>
+  <div class="hintline" id="scopeHint" hidden>仅今天：明天恢复原清单　·　永久：以后每天沿用　·　拖动 ≡ 排序</div>
 
   <section class="card"><h2>自我反省</h2><textarea id="fb" placeholder="今天做对了什么，做错了什么，明天要改什么。"></textarea></section>
   <section class="card"><h2>今日感悟</h2><textarea id="ins" placeholder="今天想到的、看见的、想记住的。"></textarea></section>
@@ -223,6 +226,11 @@ function touch(){
   d.snap=clone(d.override&&d.items?d.items:S.items);
   return d;
 }
+function ensureDay(k){
+  let d=S.days[k];
+  if(!d)d=S.days[k]={g:[],o:[],snap:null,reflect:'',insight:''};
+  return d;
+}
 function dayItems(k){
   const d=S.days[k];
   return (d&&d.override&&d.items)?d.items:S.items;
@@ -258,7 +266,7 @@ function cellInfo(k){
 function render(){
   const k=view||TODAY(),d=S.days[k],dt=parse(k);
   $('title').textContent=S.title||DEF_TITLE;
-  $('date').textContent=`${dt.getMonth()+1}月${dt.getDate()}日 周${WD[dt.getDay()]} · ${view?'历史记录':'今天'}`;
+  $('date').textContent=`${dt.getMonth()+1}月${dt.getDate()}日 周${WD[dt.getDay()]} · ${view?'历史记录 · 可修改':'今天'}`;
   $('stat').innerHTML=`<b class="sg">功 ${d?d.g.length:0}</b><b class="so">过 ${d?d.o.length:0}</b><span>连续 ${streak()} 天</span><span>累计 ${totalDays()} 天</span>`;
   $('back').hidden=!view;
   $('editBtn').hidden=!!view;
@@ -274,10 +282,9 @@ function render(){
 function renderList(t){
   const k=view||TODAY(),d=S.days[k],ro=!!view;
   const box=$(t==='g'?'listG':'listO');
-  box.classList.toggle('ro',ro);
-  const items=ro?(d&&d.snap?d.snap[t]:[]):(editing?work[t]:dayItems(k)[t]);
+  const items=ro?(d&&d.snap?d.snap[t]:dayItems(k)[t]):(editing?work[t]:dayItems(k)[t]);
   if(editing&&!ro){
-    box.innerHTML=items.map(i=>`<div class="erow"><input data-t="${t}" data-id="${i.id}" value="${esc(i.name)}" maxlength="30" placeholder="项目名称"><button class="del" data-t="${t}" data-id="${i.id}" aria-label="删除">×</button></div>`).join('')+`<button class="add" data-t="${t}">＋ 新增一项</button>`;
+    box.innerHTML=items.map(i=>`<div class="erow" data-id="${i.id}"><span class="drag" data-t="${t}" aria-label="拖动排序">≡</span><input data-t="${t}" data-id="${i.id}" value="${esc(i.name)}" maxlength="30" placeholder="项目名称"><button class="del" data-t="${t}" data-id="${i.id}" aria-label="删除">×</button></div>`).join('')+`<button class="add" data-t="${t}">＋ 新增一项</button>`;
     return;
   }
   const on=d?d[t]:[];
@@ -291,7 +298,6 @@ function fillTexts(){
   const d=S.days[view||TODAY()];
   $('fb').value=d?d.reflect:'';
   $('ins').value=d?d.insight:'';
-  $('fb').readOnly=$('ins').readOnly=!!view;
   grow($('fb'));grow($('ins'));
 }
 function goView(k){
@@ -368,8 +374,9 @@ function listClick(e){
   const el=e.target.closest('.row,.del,.add');if(!el)return;
   const t=el.dataset.t,id=el.dataset.id;
   if(el.classList.contains('row')){
-    if(view)return;
-    const a=touch()[t],i=a.indexOf(id);
+    const k=view||TODAY(),d=ensureDay(k);
+    if(!d.snap)d.snap=clone(dayItems(k));
+    const a=d[t],i=a.indexOf(id);
     i>=0?a.splice(i,1):a.push(id);
     save();render();
   }else if(el.classList.contains('del')){
@@ -388,6 +395,38 @@ function listInput(e){
   if(it)it.name=i.value;
 }
 ['listG','listO'].forEach(id=>{$(id).addEventListener('click',listClick);$(id).addEventListener('input',listInput)});
+/* 编辑模式：拖动 ≡ 排序 */
+let drag=null;
+document.addEventListener('pointerdown',e=>{
+  const h=e.target.closest('.drag');if(!h)return;
+  const row=h.closest('.erow'),box=h.closest('#listG,#listO');
+  if(!row||!box)return;
+  e.preventDefault();
+  drag={row,box,t:h.dataset.t,pid:e.pointerId};
+  row.classList.add('dragging');
+  try{h.setPointerCapture(e.pointerId)}catch(x){}
+},{passive:false});
+document.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerId!==drag.pid)return;
+  e.preventDefault();
+  const under=document.elementFromPoint(e.clientX,e.clientY);
+  const target=under&&under.closest('.erow');
+  if(target&&target!==drag.row&&target.parentNode===drag.box){
+    const r=target.getBoundingClientRect();
+    drag.box.insertBefore(drag.row,e.clientY>r.top+r.height/2?target.nextSibling:target);
+  }
+},{passive:false});
+function endDrag(e){
+  if(!drag||(e&&e.pointerId!==drag.pid))return;
+  const {row,box,t}=drag;
+  row.classList.remove('dragging');
+  const ids=[...box.querySelectorAll('.erow')].map(r=>r.dataset.id);
+  const map={};work[t].forEach(i=>map[i.id]=i);
+  work[t]=ids.map(id=>map[id]).filter(Boolean);
+  drag=null;
+}
+document.addEventListener('pointerup',endDrag);
+document.addEventListener('pointercancel',endDrag);
 function finishEdit(){
   if(!work)return;
   ['g','o'].forEach(t=>{
@@ -430,8 +469,7 @@ $('backBtn').onclick=()=>goView(TODAY());
 /* 文本自动保存 */
 [['fb','reflect'],['ins','insight']].forEach(([id,f])=>$(id).addEventListener('input',e=>{
   grow(e.target);
-  if(view)return;
-  touch()[f]=e.target.value;
+  ensureDay(view||TODAY())[f]=e.target.value;
   save();renderHist();
 }));
 
