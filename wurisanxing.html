@@ -94,6 +94,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--focus);box-shadow:0 0
     <div class="tabs" id="tabs"></div>
     <div id="hist"></div>
     <div class="legend"><span><i class="cg"></i>功多</span><span><i class="co"></i>过多</span><span><i class="ce"></i>一样多</span><span><i class="ct"></i>仅文字</span></div>
+    <div class="center"><button class="btn" id="copyRecent">复制近期记录</button></div>
   </section>
 
   <div class="foot"><button id="themeBtn">配色</button><button id="exp">导出备份</button><button id="imp">导入备份</button><input type="file" id="file" accept=".json,application/json" hidden></div>
@@ -469,7 +470,7 @@ function m2(title,desc,text,ro,btns){
   $('m2t').textContent=title;$('m2d').textContent=desc;
   const a=$('m2a');a.value=text;a.readOnly=ro;
   $('m2b').innerHTML='';
-  btns.forEach(([l,f,p])=>{const b=document.createElement('button');b.className='btn'+(p?' pri':'');b.textContent=l;b.onclick=ev=>f(ev.target);$('m2b').appendChild(b)});
+  btns.forEach(([l,f,p])=>{const b=document.createElement('button');b.className='btn'+(p?' pri':'');b.textContent=l;b.dataset.label=l;b.onclick=ev=>f(ev.target);$('m2b').appendChild(b)});
   $('modal2').hidden=false;
 }
 const closeM2=()=>{$('modal2').hidden=true};
@@ -511,6 +512,45 @@ $('exp').onclick=async()=>{
     catch(e){if(e&&e.code==='declined')return}
   }
   m2('导出备份','点「复制」粘贴到备忘录保存，或试试下载文件。',t,true,[['下载文件',()=>dlFile(t),1],['复制',b=>copyText(t,b)],['关闭',closeM2]]);
+};
+
+/* 复制近期记录给 AI 分析 */
+const COACH_PROMPT='请你作为我的反思教练，阅读下面的打卡记录，帮我找出我自己没察觉、但反复出现的问题或行为模式。\n要求：\n1. 只依据记录中的事实，不要编造或过度解读；每条模式都要附上日期，并引用我的原话或勾选项作为依据。记录太少、看不出模式时，直接说明，不要硬凑。\n2. 最多指出 2 个最明显的模式，按证据强弱排序。\n3. 最后给出 1–2 个明天就能做的、具体且小的改动，不要列一长串建议，也不要说教。\n4. 语气直接、平实，不要安慰式夸奖，不做心理诊断。\n以下是记录：';
+function snapOf(k){const d=S.days[k];return d&&d.snap?d.snap:dayItems(k)}
+function recentText(n){
+  const end=new Date(),start=new Date(end);start.setDate(end.getDate()-n+1);
+  const names=(k,t,ids)=>{
+    const snap=snapOf(k);
+    return ids.map(id=>{const it=snap[t].find(i=>i.id===id)||S.items[t].find(i=>i.id===id);return it?it.name:id});
+  };
+  const blocks=[];
+  for(let i=0;i<n;i++){
+    const x=new Date(start);x.setDate(start.getDate()+i);
+    const k=key(x),d=S.days[k];
+    if(!d)continue;
+    const g=names(k,'g',d.g||[]),o=names(k,'o',d.o||[]);
+    const fb=(d.reflect||'').trim(),ins=(d.insight||'').trim();
+    if(!g.length&&!o.length&&!fb&&!ins)continue;
+    const lines=[`${k} 周${WD[x.getDay()]}`];
+    if(g.length)lines.push('功：'+g.join('、'));
+    if(o.length)lines.push('过：'+o.join('、'));
+    if(fb)lines.push('自我反省：'+fb);
+    if(ins)lines.push('今日感悟：'+ins);
+    blocks.push(lines.join('\n'));
+  }
+  const range=`记录范围：${key(start)} ～ ${key(end)}（最近 ${n} 天，有记录 ${blocks.length} 天）`;
+  return COACH_PROMPT+'\n\n'+range+'\n\n'+(blocks.length?blocks.join('\n\n'):'（这段时间没有记录）');
+}
+function copyRecent(n,btn){
+  const t=recentText(n);
+  [...$('m2b').children].forEach(x=>x.textContent=x.dataset.label||x.textContent);
+  $('m2a').value=t;
+  $('m2d').textContent=`已生成最近 ${n} 天的记录。若没有自动复制，长按下方文本全选复制。`;
+  copyText(t,btn);
+}
+$('copyRecent').onclick=()=>{
+  m2('复制近期记录','选择范围后会自动生成并复制，直接粘贴给 AI 即可。','',true,
+    [['最近7天',b=>copyRecent(7,b),1],['最近30天',b=>copyRecent(30,b)],['关闭',closeM2]]);
 };
 
 /* 跨天刷新 */
