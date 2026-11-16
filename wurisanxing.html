@@ -94,7 +94,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--focus);box-shadow:0 0
     <div class="tabs" id="tabs"></div>
     <div id="hist"></div>
     <div class="legend"><span><i class="cg"></i>功多</span><span><i class="co"></i>过多</span><span><i class="ce"></i>一样多</span><span><i class="ct"></i>仅文字</span></div>
-    <div class="center"><button class="btn" id="copyRecent">复制近期记录</button></div>
+    <div class="center"><button class="btn" id="copyRecent">问AI</button></div>
   </section>
 
   <div class="foot"><button id="themeBtn">配色</button><button id="exp">导出备份</button><button id="imp">导入备份</button><input type="file" id="file" accept=".json,application/json" hidden></div>
@@ -283,11 +283,16 @@ function renderList(t){
   const on=d?d[t]:[];
   box.innerHTML=items.length?items.map(i=>`<div class="row ${t} ${on.includes(i.id)?'on':''}" data-t="${t}" data-id="${i.id}"><span class="chk">✓</span><span>${esc(i.name)}</span></div>`).join(''):`<div class="empty">${ro?'当天没有记录':'暂无项目'}</div>`;
 }
+function grow(el){
+  el.style.height='auto';
+  el.style.height=(el.scrollHeight+(el.offsetHeight-el.clientHeight))+'px';
+}
 function fillTexts(){
   const d=S.days[view||TODAY()];
   $('fb').value=d?d.reflect:'';
   $('ins').value=d?d.insight:'';
   $('fb').readOnly=$('ins').readOnly=!!view;
+  grow($('fb'));grow($('ins'));
 }
 function goView(k){
   if(editing){finishEdit();editing=false;work=null;}
@@ -424,6 +429,7 @@ $('backBtn').onclick=()=>goView(TODAY());
 
 /* 文本自动保存 */
 [['fb','reflect'],['ins','insight']].forEach(([id,f])=>$(id).addEventListener('input',e=>{
+  grow(e.target);
   if(view)return;
   touch()[f]=e.target.value;
   save();renderHist();
@@ -549,9 +555,11 @@ function copyRecent(n,btn){
   copyText(t,btn);
 }
 $('copyRecent').onclick=()=>{
-  m2('复制近期记录','选择范围后会自动生成并复制，直接粘贴给 AI 即可。','',true,
+  m2('问AI','选择范围后会自动生成并复制，直接粘贴给 AI 即可。','',true,
     [['最近7天',b=>copyRecent(7,b),1],['最近30天',b=>copyRecent(30,b)],['关闭',closeM2]]);
 };
+
+window.addEventListener('resize',()=>{grow($('fb'));grow($('ins'))});
 
 /* 跨天刷新 */
 document.addEventListener('visibilitychange',()=>{
